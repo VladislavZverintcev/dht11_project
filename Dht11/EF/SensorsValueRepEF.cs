@@ -2,25 +2,31 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using dht11_project.Sensor;
 
 namespace dht11_project.EF
 {
-    class SensorsValueRep
+    class SensorsValueRepEF : ISensorRep
     {
-        public static bool CheckConnection()
+        ConfigData _config;
+        public SensorsValueRepEF(ConfigData config)
         {
-            using (var context = new DBContext())
+            _config = config;
+        }
+        public bool CheckConnection()
+        {
+            using (var context = new DBcontextEF(_config))
             {
                 if(context.Database.CanConnect())
                 { return true; }
                 else { return false; }
             }
         }
-        public static void AddSensorValue(Model.DataModel newsensvalue)
+        public void AddSensorValue(Model.DataModel newsensvalue)
         {
             try
             {
-                using (var context = new DBContext())
+                using (var context = new DBcontextEF(_config))
                 {
                     context.SensValues.Add(newsensvalue);
                     context.SaveChanges();

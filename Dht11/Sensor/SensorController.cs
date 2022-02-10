@@ -6,6 +6,7 @@ using Iot.Device.DHTxx;
 using IoT.Device;
 using UnitsNet;
 using dht11_project.EF;
+using System.Diagnostics;
 
 namespace dht11_project.Sensor
 {
@@ -13,57 +14,53 @@ namespace dht11_project.Sensor
     {
         LibGpiodDriver rpd;
         GpioController gpio;
-        int _interval;
-        bool enable = false;
+        ConfigData _config;
 
-        public SensorController(int interval)
+        public SensorController(ConfigData config)
         {
-            _interval = interval;
+            _config = config;
             rpd = new LibGpiodDriver();
             gpio = new GpioController(PinNumberingScheme.Logical, rpd);
             
         }
         public void Start()
         {
-            enable = true;
-            using (Dht11 dht = new Dht11(26, PinNumberingScheme.Logical, gpio))
+            
+            ISensorRep rep = new SensorsValueRepEF(_config);
+            while (!rep.CheckConnection())
             {
-                Console.WriteLine($"------------Подключение к базе------------");
-                while (!SensorsValueRep.CheckConnection())
-                {
-                    Console.WriteLine($"------------Попытка подключиться к базе------------");
-                    Thread.Sleep(2000);
-                }
-                Console.WriteLine($"Подключение успешно!");
-                while (enable)
+                Debug.WriteLine($"Dht11 demon: Failed database connection, trying again. {DateTime.UtcNow.ToString("G")}");
+                Thread.Sleep(5000);
+            }
+            using (Dht11 dht = new Dht11(_config.Dht11_pin, PinNumberingScheme.Logical, gpio))
+            {
+                while(true)
                 {
                     Temperature temperature;
-                    //Temperature temperature = dht.Temperature;
                     dht.TryReadTemperature(out temperature);
                     RelativeHumidity rHumidity;
                     dht.TryReadHumidity(out rHumidity);
-
                     if (dht.IsLastReadSuccessful)
                     {
-                        Console.WriteLine($"Новое показание!");
                         Model.DataModel newsensvalue = new Model.DataModel
                         {
                             RegistredDateTimeG = DateTime.UtcNow.ToString("G"),
                             Temperature = Convert.ToDecimal(temperature.DegreesCelsius),
                             Humidity = Convert.ToDecimal(rHumidity.Percent)
                         };
-                        if(SensorsValueRep.CheckConnection())
+                        try
                         {
-                            SensorsValueRep.AddSensorValue(newsensvalue);
+                            rep.AddSensorValue(newsensvalue);
+                        }
+                        catch
+                        {
+                            Debug.WriteLine($"Dht11 demon: Failed to add SensorValue. Probably database connection is lost. {DateTime.UtcNow.ToString("G")}");
                         }
                     }
-                    Thread.Sleep(_interval);
+                    Thread.Sleep(_config.SensorDelay);
                 }
+                
             }
-        }
-        public void Stop()
-        {
-            enable = false;
         }
     }
 }

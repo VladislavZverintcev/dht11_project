@@ -27,24 +27,24 @@ namespace dht11_project
                 }
                 catch
                 {
-                    Debug.WriteLine($"Dht11 demon: cofig.xml reading failed! {DateTime.UtcNow.ToString("G")}");
+                    Debug.WriteLine($"Dht11_project: cofig.xml reading failed! {DateTime.UtcNow.ToString("G")}");
                     return defaultConfig;
                 }
             }
             else
             {
-                Debug.WriteLine($"Dht11 demon: cofig.xml not exist, creating... {DateTime.UtcNow.ToString("G")}");
+                Debug.WriteLine($"Dht11_project: cofig.xml not exist, creating... {DateTime.UtcNow.ToString("G")}");
                 try
                 {
                     TextWriter tw = new StreamWriter(configPath);
                     Write(tw, defaultConfig);
                     tw.Close();
-                    Debug.WriteLine($"Dht11 demon: Please configure config.xml {DateTime.UtcNow.ToString("G")}");
+                    Debug.WriteLine($"Dht11_project: Please configure config.xml {DateTime.UtcNow.ToString("G")}");
                     return defaultConfig;
                 }
                 catch
                 {
-                    Debug.WriteLine($"Dht11 demon: cofig.xml creating failed! {DateTime.UtcNow.ToString("G")}");
+                    Debug.WriteLine($"Dht11_project: cofig.xml creating failed! {DateTime.UtcNow.ToString("G")}");
                     return defaultConfig;
                 }
             }

@@ -29,35 +29,46 @@ namespace dht11_project.Sensor
             ISensorRep rep = new SensorsValueRepEF(_config);
             while (!rep.CheckConnection())
             {
-                Debug.WriteLine($"Dht11 demon: Failed database connection, trying again. {DateTime.UtcNow.ToString("G")}");
+                Debug.WriteLine($"Dht11_project: Failed database connection, trying again. {DateTime.UtcNow.ToString("G")}");
                 Thread.Sleep(5000);
             }
             using (Dht11 dht = new Dht11(_config.Dht11_pin, PinNumberingScheme.Logical, gpio))
             {
                 while(true)
                 {
-                    Temperature temperature;
-                    dht.TryReadTemperature(out temperature);
-                    RelativeHumidity rHumidity;
-                    dht.TryReadHumidity(out rHumidity);
-                    if (dht.IsLastReadSuccessful)
+                    Model.DataModel newsensvalue = null;
+                    int realdelay = _config.SensorDelay;
+                    while (newsensvalue == null)
                     {
-                        Model.DataModel newsensvalue = new Model.DataModel
+                        Temperature temperature;
+                        dht.TryReadTemperature(out temperature);
+                        RelativeHumidity rHumidity;
+                        dht.TryReadHumidity(out rHumidity);
+                        if (dht.IsLastReadSuccessful)
                         {
-                            RegistredDateTimeG = DateTime.UtcNow.ToString("G"),
-                            Temperature = Convert.ToDecimal(temperature.DegreesCelsius),
-                            Humidity = Convert.ToDecimal(rHumidity.Percent)
-                        };
-                        try
-                        {
-                            rep.AddSensorValue(newsensvalue);
+                            newsensvalue = new Model.DataModel
+                            {
+                                RegistredDateTimeG = DateTime.UtcNow.ToString("G"),
+                                Temperature = Convert.ToDecimal(temperature.DegreesCelsius),
+                                Humidity = Convert.ToDecimal(rHumidity.Percent)
+                            };
+                            try
+                            {
+                                rep.AddSensorValue(newsensvalue);
+                            }
+                            catch
+                            {
+                                Debug.WriteLine($"Dht11_project: Failed to add SensorValue. Probably database connection is lost. {DateTime.UtcNow.ToString("G")}");
+                            }
                         }
-                        catch
+                        if((realdelay - 2000) >= 0)
                         {
-                            Debug.WriteLine($"Dht11 demon: Failed to add SensorValue. Probably database connection is lost. {DateTime.UtcNow.ToString("G")}");
+                            realdelay = realdelay - 2000;
                         }
+                        else { realdelay = 0; }
+                        Thread.Sleep(2000);
                     }
-                    Thread.Sleep(_config.SensorDelay);
+                    Thread.Sleep(realdelay);
                 }
                 
             }

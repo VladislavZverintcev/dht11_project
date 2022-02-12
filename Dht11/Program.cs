@@ -10,18 +10,17 @@ using System.Diagnostics;
 
 namespace dht11_project
 {
-
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Welcome to Dht11 demon! For exit press Ctrl + C");
+            Console.WriteLine("Welcome to Dht11_project! For exit press Ctrl + C");
             ConfigWorker cw = new ConfigWorker();
             ConfigData config = cw.GetConfig();
             if(config.DBConnectionString == "SomeConnectionString")
             {
                 Console.WriteLine("Please configure config.xml");
-                Debug.WriteLine($"Dht11 demon: Please configure config.xml {DateTime.UtcNow.ToString("G")}");
+                Debug.WriteLine($"Dht11_project: Please configure config.xml {DateTime.UtcNow.ToString("G")}");
                 System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
             SensorController sCont = new SensorController(config);

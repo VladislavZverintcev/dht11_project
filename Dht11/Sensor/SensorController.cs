@@ -48,7 +48,7 @@ namespace dht11_project.Sensor
                         {
                             newsensvalue = new Model.DataModel
                             {
-                                RegistredDateTimeG = DateTime.UtcNow.ToString("G"),
+                                RegistredDateTime = DateTime.UtcNow.Ticks,
                                 Temperature = Convert.ToDecimal(temperature.DegreesCelsius),
                                 Humidity = Convert.ToDecimal(rHumidity.Percent)
                             };
